@@ -55,13 +55,12 @@ extern int Sell_trailprofit_start_inpoints=50;
 extern int Sell_trailing_profit_points = 25;
 //+------------------------------------------------------------------+
 int Buy_Profit_Points,Sell_Profit_Points,Buy_count,Sell_count,Slippage_value,Pair_open_trades,Pair_history_trades;
-double Averaging_points,Buy_Target_Profit,Buy_Averaging_points,Sell_Target_Profit,Sell_Averaging_points,Point_value,Buy_LotSize,Sell_LotSize,Minimum_stoploss_value,Gross_profit_loss,Buy_gross_profit_loss,Sell_gross_profit_loss,Max_gross_profit_loss,Max_Buy_gross_profit_loss,Max_Sell_gross_profit_loss,Buy_trades_profit,Sell_trades_profit,Current_profit_loss,Buy_trades_lot,Sell_trades_lot,Net_lot,BuyStopLoss,SellStopLoss,BuyTakeProfit,SellTakeProfit,Sell_OP,Buy_OP,First_Sell_OP,First_Buy_OP,Sell_MLS,Buy_MLS;
+double Bopen_Price,Sopen_Price,Averaging_points,Buy_Target_Profit,Buy_Averaging_points,Sell_Target_Profit,Sell_Averaging_points,Point_value,Buy_LotSize,Sell_LotSize,Minimum_stoploss_value,Gross_profit_loss,Buy_gross_profit_loss,Sell_gross_profit_loss,Max_gross_profit_loss,Max_Buy_gross_profit_loss,Max_Sell_gross_profit_loss,Buy_trades_profit,Sell_trades_profit,Current_profit_loss,Buy_trades_lot,Sell_trades_lot,Net_lot,BuyStopLoss,SellStopLoss,BuyTakeProfit,SellTakeProfit,Sell_OP,Buy_OP,First_Sell_OP,First_Buy_OP,Sell_MLS,Buy_MLS;
 bool  Sell_TP,Buy_TP;
 string Trend,ErrAlert;
 #define Point_value Point_value_calc()//calling the Point_value_calc function and return with the value
 #define Slippage_value Slippage_points_calc()//calling the Slippage_points_calc function and return with the value
 #define Minimum_stoploss_value Minimum_stoploss_points_calc()
-      double Bopen_Price,Sopen_Price;
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
