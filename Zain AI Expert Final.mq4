@@ -56,8 +56,13 @@ extern int Sell_trailing_profit_points = 25;
 //+------------------------------------------------------------------+
 int Buy_Profit_Points,Sell_Profit_Points,Buy_count,Sell_count,Slippage_value,Pair_open_trades,Pair_history_trades;
 double Averaging_points,Buy_Target_Profit,Buy_Averaging_points,Sell_Target_Profit,Sell_Averaging_points,Point_value,Buy_LotSize,Sell_LotSize,Minimum_stoploss_value,Gross_profit_loss,Buy_gross_profit_loss,Sell_gross_profit_loss,Max_gross_profit_loss,Max_Buy_gross_profit_loss,Max_Sell_gross_profit_loss,Buy_trades_profit,Sell_trades_profit,Current_profit_loss,Buy_trades_lot,Sell_trades_lot,Net_lot,BuyStopLoss,SellStopLoss,BuyTakeProfit,SellTakeProfit,Sell_OP,Buy_OP,First_Sell_OP,First_Buy_OP,Sell_MLS,Buy_MLS;
-bool  Stop_Placing,Select,Closed,Modify,Sell_TP,Buy_TP;
+bool  Sell_TP,Buy_TP;
 string Trend,ErrAlert;
+#define Point_value Point_value_calc()//calling the Point_value_calc function and return with the value
+#define Slippage_value Slippage_points_calc()//calling the Slippage_points_calc function and return with the value
+#define Minimum_stoploss_value Minimum_stoploss_points_calc()
+      double Bopen_Price,Sopen_Price;
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -71,11 +76,7 @@ int OnInit()
       Print("Error connecting to server: ", result);
       return INIT_FAILED;
      }
-   Point_value = Point_value_calc();//calling the Point_value_calc function and return with the value
-   Slippage_value = Slippage_points_calc();//calling the Slippage_points_calc function and return with the value
-   Minimum_stoploss_value = Minimum_stoploss_points_calc();
    Averaging_points=Start_Averaging_points;
-
    Buy_Averaging_points=Start_Averaging_points;
    Sell_Averaging_points=Start_Averaging_points;
 //---
@@ -94,7 +95,6 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
-
    Trades_Counter();
    Gross_Profit_Loss();
    Current_Profit_Loss();
@@ -121,7 +121,6 @@ void OnTick()
       else
          Buy_LotSize=Starting_LotSize;
 
-      double Bopen_Price=Close[1];
       Buy_trade();
       Buy_LTOP();
 
@@ -135,123 +134,42 @@ void OnTick()
       else
          Sell_LotSize=Starting_LotSize;
 
-      double Sopen_Price=Close[1];
+      
       Sell_trade();
       Sell_LTOP();
      }
 
 //+------------------------------------------------------------------+
-   if(Opening_method_select == 0)
+   switch(Opening_method_select)
      {
-      if(Recover_method_Select == 0)
-        {
-         if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1]  && Close[1]<(Buy_OP - (Step_Points*Point_value))&& Buy_LotSize>=0.01 && Sell_TP==False)
+      case 0:
+         switch(Recover_method_Select)
            {
-            Trend="Sell";
-            Bopen_Price=Close[1];
-            Buy_trade();
-            Buy_LTOP();
-
-           }
-         //+------------------------------------------------------------------+
-         if(Sell_count >0  && Buy_count==1 && Sopen_Price!=Close[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value))&& Sell_LotSize>=0.01 && Buy_TP==False)
-           {
-            Trend="Buy";
-            Sopen_Price=Close[1];
-            Sell_trade();
-            Sell_LTOP();
-
-           }
-        }
-      //+------------------------------------------------------------------+
-      else
-         if(Recover_method_Select==1)
-           {
-            if(Buy_count >0  && Bopen_Price!=Close[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
-              {
-               Bopen_Price=Close[1];
-               Buy_trade();
-               Buy_LTOP();
-
-               if(Buy_Averaging_points > Averaging_points_limit)
-                  Buy_Averaging_points=Buy_Averaging_points-Averaging_points_Step;
-
-               if(Buy_Profit_Points < Profit_points_limit)
-                  Buy_Profit_Points=Buy_Profit_Points+Profit_points_Step;
-              }
-            //+------------------------------------------------------------------+
-            if(Sell_count >0 && Sopen_Price!=Close[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
-              {
-               Sopen_Price=Close[1];
-               Sell_trade();
-               Sell_LTOP();
-
-               if(Sell_Averaging_points > Averaging_points_limit)
-                  Sell_Averaging_points=Sell_Averaging_points-Averaging_points_Step;
-
-               if(Sell_Profit_Points < Profit_points_limit)
-                  Sell_Profit_Points=Sell_Profit_Points+Profit_points_Step;
-              }
-           }
-         //+------------------------------------------------------------------+
-         else
-            if(Recover_method_Select==2)
-              {
-               if(Buy_count >0  && Bopen_Price!=Close[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
+            case 0:
+               if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1]  && Close[1]<(Buy_OP - (Step_Points*Point_value))&& Buy_LotSize>=0.01 &&  Buy_TP==False)
                  {
+                  Trend="Sell";
                   Bopen_Price=Close[1];
                   Buy_trade();
                   Buy_LTOP();
 
-                  if(Buy_Averaging_points < Averaging_points_limit)
-                     Buy_Averaging_points=Buy_Averaging_points+Averaging_points_Step;
-
-                  if(Buy_Profit_Points > Profit_points_limit)
-                     Buy_Profit_Points=Buy_Profit_Points-Profit_points_Step;
                  }
                //+------------------------------------------------------------------+
-               if(Sell_count >0 && Sopen_Price!=Close[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
+               if(Sell_count >0  && Buy_count==1 && Sopen_Price!=Close[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value))&& Sell_LotSize>=0.01 && Sell_TP==False)
                  {
+                  Trend="Buy";
                   Sopen_Price=Close[1];
                   Sell_trade();
                   Sell_LTOP();
 
-                  if(Sell_Averaging_points < Averaging_points_limit)
-                     Sell_Averaging_points=Sell_Averaging_points+Averaging_points_Step;
-
-                  if(Sell_Profit_Points > Profit_points_limit)
-                     Sell_Profit_Points=Sell_Profit_Points-Profit_points_Step;
                  }
-              }
-     }
-//+------------------------------------------------------------------+
-   else
-      if(Opening_method_select==1)
-        {
-         if(Recover_method_Select==0)
-           {
-            if(Buy_count >0  && Bopen_Price!=Close[1]  && Close[1]> Open[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
-              {
-               Bopen_Price=Close[1];
-               Buy_trade();
-               Buy_LTOP();
+               break;
 
-              }
             //+------------------------------------------------------------------+
-            if(Sell_count >0  && Sopen_Price!=Close[1]  && Close[1]< Open[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
-              {
-               Sopen_Price=Close[1];
-               Sell_trade();
-               Sell_LTOP();
-
-              }
-           }
-         //+------------------------------------------------------------------+
-         else
-            if(Recover_method_Select==1)
-              {
-               if(Buy_count >0  && Bopen_Price!=Close[1] && Close[1]> Open[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
+            case 1:
+               if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
                  {
+                  Trend="Sell";
                   Bopen_Price=Close[1];
                   Buy_trade();
                   Buy_LTOP();
@@ -263,8 +181,97 @@ void OnTick()
                      Buy_Profit_Points=Buy_Profit_Points+Profit_points_Step;
                  }
                //+------------------------------------------------------------------+
-               if(Sell_count >0 && Sopen_Price!=Close[1] && Close[1]< Open[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
+               if(Sell_count >0 && Buy_count==1 && Sopen_Price!=Close[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
                  {
+                  Trend="Buy";
+                  Sopen_Price=Close[1];
+                  Sell_trade();
+                  Sell_LTOP();
+
+                  if(Sell_Averaging_points > Averaging_points_limit)
+                     Sell_Averaging_points=Sell_Averaging_points-Averaging_points_Step;
+
+                  if(Sell_Profit_Points < Profit_points_limit)
+                     Sell_Profit_Points=Sell_Profit_Points+Profit_points_Step;
+                 }
+               break;
+
+            //+------------------------------------------------------------------+
+            case 2:
+               if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
+                 {
+                  Trend="Sell";
+                  Bopen_Price=Close[1];
+                  Buy_trade();
+                  Buy_LTOP();
+
+                  if(Buy_Averaging_points < Averaging_points_limit)
+                     Buy_Averaging_points=Buy_Averaging_points+Averaging_points_Step;
+
+                  if(Buy_Profit_Points > Profit_points_limit)
+                     Buy_Profit_Points=Buy_Profit_Points-Profit_points_Step;
+                 }
+               //+------------------------------------------------------------------+
+               if(Sell_count >0 && Buy_count==1 && Sopen_Price!=Close[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
+                 {
+                  Trend="Buy";
+                  Sopen_Price=Close[1];
+                  Sell_trade();
+                  Sell_LTOP();
+
+                  if(Sell_Averaging_points < Averaging_points_limit)
+                     Sell_Averaging_points=Sell_Averaging_points+Averaging_points_Step;
+
+                  if(Sell_Profit_Points > Profit_points_limit)
+                     Sell_Profit_Points=Sell_Profit_Points-Profit_points_Step;
+                 }
+               break;
+           }
+         break;
+
+      //+------------------------------------------------------------------+
+      case 1:
+         switch(Recover_method_Select)
+           {
+            case 0:
+               if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1]  && Close[1]> Open[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
+                 {
+                  Trend="Sell";
+                  Bopen_Price=Close[1];
+                  Buy_trade();
+                  Buy_LTOP();
+
+                 }
+               //+------------------------------------------------------------------+
+               if(Sell_count >0  && Buy_count==1 && Sopen_Price!=Close[1]  && Close[1]< Open[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
+                 {
+                  Trend="Buy";
+                  Sopen_Price=Close[1];
+                  Sell_trade();
+                  Sell_LTOP();
+
+                 }
+               break;
+
+            //+------------------------------------------------------------------+
+            case 1:
+               if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1] && Close[1]> Open[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
+                 {
+                  Trend="Sell";
+                  Bopen_Price=Close[1];
+                  Buy_trade();
+                  Buy_LTOP();
+
+                  if(Buy_Averaging_points > Averaging_points_limit)
+                     Buy_Averaging_points=Buy_Averaging_points-Averaging_points_Step;
+
+                  if(Buy_Profit_Points < Profit_points_limit)
+                     Buy_Profit_Points=Buy_Profit_Points+Profit_points_Step;
+                 }
+               //+------------------------------------------------------------------+
+               if(Sell_count >0 && Buy_count==1 && Sopen_Price!=Close[1] && Close[1]< Open[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
+                 {
+                  Trend="Buy";
                   Sopen_Price=Close[1];
                   Sell_trade();
                   Sell_LTOP();
@@ -276,46 +283,48 @@ void OnTick()
                      Sell_Profit_Points=Sell_Profit_Points+Profit_points_Step;
                  }
 
-              }
+               break;
+
             //+------------------------------------------------------------------+
-            else
-               if(Recover_method_Select==2)
+            case 2:
+               //Net_Lot();
+               if(Buy_count >0  && Sell_count == 1 && Bopen_Price!=Close[1] && Close[1]> Open[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
                  {
-                  //Net_Lot();
-                  if(Buy_count >0  && Bopen_Price!=Close[1] && Close[1]> Open[1] && Close[1]<(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
-                    {
-                     Bopen_Price=Close[1];
-                     Buy_trade();
-                     Buy_LTOP();
+                  Trend="Sell";
+                  Bopen_Price=Close[1];
+                  Buy_trade();
+                  Buy_LTOP();
 
-                     if(Buy_Averaging_points < Averaging_points_limit)
-                        Buy_Averaging_points=Buy_Averaging_points+Averaging_points_Step;
+                  if(Buy_Averaging_points < Averaging_points_limit)
+                     Buy_Averaging_points=Buy_Averaging_points+Averaging_points_Step;
 
-                     if(Buy_Profit_Points > Profit_points_limit)
-                        Buy_Profit_Points=Buy_Profit_Points-Profit_points_Step;
-                    }
-                  //+------------------------------------------------------------------+
-                  if(Sell_count >0 && Sopen_Price!=Close[1] && Close[1]< Open[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
-                    {
-                     Sopen_Price=Close[1];
-                     Sell_trade();
-                     Sell_LTOP();
-
-                     if(Sell_Averaging_points < Averaging_points_limit)
-                        Sell_Averaging_points=Sell_Averaging_points+Averaging_points_Step;
-
-                     if(Sell_Profit_Points > Profit_points_limit)
-                        Sell_Profit_Points=Sell_Profit_Points-Profit_points_Step;
-                    }
+                  if(Buy_Profit_Points > Profit_points_limit)
+                     Buy_Profit_Points=Buy_Profit_Points-Profit_points_Step;
                  }
+               //+------------------------------------------------------------------+
+               if(Sell_count >0 && Buy_count==1 && Sopen_Price!=Close[1] && Close[1]< Open[1] && Close[1]>(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
+                 {
+                  Trend="Buy";
+                  Sopen_Price=Close[1];
+                  Sell_trade();
+                  Sell_LTOP();
 
-        }
+                  if(Sell_Averaging_points < Averaging_points_limit)
+                     Sell_Averaging_points=Sell_Averaging_points+Averaging_points_Step;
+
+                  if(Sell_Profit_Points > Profit_points_limit)
+                     Sell_Profit_Points=Sell_Profit_Points-Profit_points_Step;
+                 }
+               break;
+           }
+
+         break;
+
       //+------------------------------------------------------------------+
-      else
-         if(Opening_method_select==2)
+      case 2:
+         switch(Recover_method_Select)
            {
-            if(Recover_method_Select==0)
-              {
+            case 0:
                if(Buy_count >0  && Sell_count==1 && Ask<=(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
                  {
                   Trend="Sell";
@@ -333,74 +342,77 @@ void OnTick()
                   Sell_LTOP();
 
                  }
-              }
+               break;
+
             //+------------------------------------------------------------------+
-            else
-               if(Recover_method_Select==1)
+            case 1:
+               //Net_Lot();
+               if(Buy_count >0  && Sell_count == 1 && Ask<=(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
                  {
-                  //Net_Lot();
-                  if(Buy_count >0  && Ask<=(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
-                    {
-                     Bopen_Price=Close[1];
-                     Buy_trade();
-                     Buy_LTOP();
+                  Trend="Sell";
+                  Bopen_Price=Close[1];
+                  Buy_trade();
+                  Buy_LTOP();
 
-                     if(Buy_Averaging_points > Averaging_points_limit)
-                        Buy_Averaging_points=Buy_Averaging_points-Averaging_points_Step;
+                  if(Buy_Averaging_points > Averaging_points_limit)
+                     Buy_Averaging_points=Buy_Averaging_points-Averaging_points_Step;
 
-                     if(Buy_Profit_Points < Profit_points_limit)
-                        Buy_Profit_Points=Buy_Profit_Points+Profit_points_Step;
-                    }
-                  //+------------------------------------------------------------------+
-                  if(Sell_count >0 && Bid>=(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
-                    {
-                     Sopen_Price=Close[1];
-                     Sell_trade();
-                     Sell_LTOP();
-
-                     if(Sell_Averaging_points > Averaging_points_limit)
-                        Sell_Averaging_points=Sell_Averaging_points-Averaging_points_Step;
-
-                     if(Sell_Profit_Points < Profit_points_limit)
-                        Sell_Profit_Points=Sell_Profit_Points+Profit_points_Step;
-                    }
-
+                  if(Buy_Profit_Points < Profit_points_limit)
+                     Buy_Profit_Points=Buy_Profit_Points+Profit_points_Step;
                  }
                //+------------------------------------------------------------------+
-               else
-                  if(Recover_method_Select==2)
-                    {
-                     //Net_Lot();
-                     if(Buy_count >0  && Ask<=(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01)
-                       {
-                        Bopen_Price=Close[1];
-                        Buy_trade();
-                        Buy_LTOP();
+               if(Sell_count >0 && Buy_count==1 && Bid>=(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
+                 {
+                  Trend="Buy";
+                  Sopen_Price=Close[1];
+                  Sell_trade();
+                  Sell_LTOP();
 
-                        if(Buy_Averaging_points < Averaging_points_limit)
-                           Buy_Averaging_points=Buy_Averaging_points+Averaging_points_Step;
+                  if(Sell_Averaging_points > Averaging_points_limit)
+                     Sell_Averaging_points=Sell_Averaging_points-Averaging_points_Step;
 
-                        if(Buy_Profit_Points > Profit_points_limit)
-                           Buy_Profit_Points=Buy_Profit_Points-Profit_points_Step;
-                       }
-                     //+------------------------------------------------------------------+
-                     if(Sell_count >0 && Bid>=(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01)
-                       {
-                        Sopen_Price=Close[1];
-                        Sell_trade();
-                        Sell_LTOP();
+                  if(Sell_Profit_Points < Profit_points_limit)
+                     Sell_Profit_Points=Sell_Profit_Points+Profit_points_Step;
+                 }
+               break;
 
-                        if(Sell_Averaging_points < Averaging_points_limit)
-                           Sell_Averaging_points=Sell_Averaging_points+Averaging_points_Step;
+            //+------------------------------------------------------------------+
+            case 2:
+               //Net_Lot();
+               if(Buy_count >0  && Sell_count == 1 && Ask<=(Buy_OP - (Step_Points*Point_value)) && Buy_LotSize>=0.01 && Buy_TP==False)
+                 {
+                  Trend="Sell";
+                  Bopen_Price=Close[1];
+                  Buy_trade();
+                  Buy_LTOP();
 
-                        if(Sell_Profit_Points > Profit_points_limit)
-                           Sell_Profit_Points=Sell_Profit_Points-Profit_points_Step;
-                       }
-                    }
+                  if(Buy_Averaging_points < Averaging_points_limit)
+                     Buy_Averaging_points=Buy_Averaging_points+Averaging_points_Step;
 
+                  if(Buy_Profit_Points > Profit_points_limit)
+                     Buy_Profit_Points=Buy_Profit_Points-Profit_points_Step;
+                 }
+               //+------------------------------------------------------------------+
+               if(Sell_count >0 && Buy_count==1 && Bid>=(Sell_OP+ (Step_Points * Point_value)) && Sell_LotSize>=0.01 && Sell_TP==False)
+                 {
+                  Trend="Buy";
+                  Sopen_Price=Close[1];
+                  Sell_trade();
+                  Sell_LTOP();
+
+                  if(Sell_Averaging_points < Averaging_points_limit)
+                     Sell_Averaging_points=Sell_Averaging_points+Averaging_points_Step;
+
+                  if(Sell_Profit_Points > Profit_points_limit)
+                     Sell_Profit_Points=Sell_Profit_Points-Profit_points_Step;
+                 }
+               break;
            }
-   Comment(
-      "                             Trend =",Trend,"  SellTP=",Sell_TP,"  BuyTP=",Buy_TP,"  Sellprofit=",Sell_LotSize,"  Buyprofit=",Buy_LotSize,"  profit=",Current_profit_loss,"  GPL=",Gross_profit_loss,"  MGPL=",Max_gross_profit_loss);
+         break;
+
+     }
+//Comment(
+// "                             Trend =",Trend,"  SellTP=",Sell_TP,"  BuyTP=",Buy_TP,"  Sellprofit=",Sell_LotSize,"  Buyprofit=",Buy_LotSize,"  profit=",Current_profit_loss,"  GPL=",Gross_profit_loss,"  MGPL=",Max_gross_profit_loss);
 
   }
 //+------------------------------------------------------------------+
@@ -408,22 +420,22 @@ void OnTick()
 double Point_value_calc()
   {
    if(Digits == 2 || Digits == 3)
-      Point_value = 0.01;
+      double point_value = 0.01;
    else
       if(Digits == 4 || Digits == 5)
-         Point_value = 0.0001;
-   return(Point_value);
+         point_value = 0.0001;
+   return(point_value);
   }
 //+------------------------------------------------------------------+
 //New function to determine the current symbol max Slippage points
 double Slippage_points_calc()
   {
    if(Digits == 2 || Digits == 4)
-      Slippage_value = Slippage_points;
+      int slippage_value = Slippage_points;
    else
       if(Digits == 3 || Digits == 5)
-         Slippage_value = Slippage_points*10;
-   return(Slippage_value);
+         slippage_value = Slippage_points*10;
+   return(slippage_value);
   }
 
 //+------------------------------------------------------------------+
@@ -431,19 +443,20 @@ double Slippage_points_calc()
 double Minimum_stoploss_points_calc()
   {
    if(Digits == 2 || Digits == 4)
-      Minimum_stoploss_value = MarketInfo(Symbol(),MODE_STOPLEVEL);
+      double minimum_stoploss_value = MarketInfo(Symbol(),MODE_STOPLEVEL);
    else
       if(Digits == 3 || Digits == 5)
-         Minimum_stoploss_value = MarketInfo(Symbol(),MODE_STOPLEVEL)/10;
-   return(Minimum_stoploss_value);
+         minimum_stoploss_value = MarketInfo(Symbol(),MODE_STOPLEVEL)/10;
+   return(minimum_stoploss_value);
   }
 
 //+------------------------------------------------------------------+
 void Total_Trailing_profit()
   {
-  int pos_0;
-  double Total_trailing_points,Tpcal_Sell,Stopcal_Buy,Tpcal_Buy,Stopcal_Sell,Stop_current,TProfit_current;
-  
+   int pos_0;
+   double Total_trailing_points,Tpcal_Sell,Stopcal_Buy,Tpcal_Buy,Stopcal_Sell,Stop_current,TProfit_current;
+   bool Modify,Select;
+
    if(Trend=="Sell")
      {
       if((Gross_profit_loss + Current_profit_loss) >= (Net_lot * 10 * Profit_Points + Max_gross_profit_loss)&& Net_lot>0)
@@ -454,7 +467,8 @@ void Total_Trailing_profit()
 
          if(Bid-Stopcal_Buy> (Minimum_stoploss_value*Point_value)&& Ask-Tpcal_Sell > (Minimum_stoploss_value*Point_value))
            {
-            Buy_TP=True;Sell_TP=True;
+            Buy_TP=True;
+            Sell_TP=True;
 
             for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
               {
@@ -561,7 +575,8 @@ void Total_Trailing_profit()
 
             if(Stopcal_Sell-Ask > (Minimum_stoploss_value*Point_value)&& Tpcal_Buy-Bid > (Minimum_stoploss_value*Point_value))
               {
-               Sell_TP=True;Buy_TP=True;
+               Sell_TP=True;
+               Buy_TP=True;
 
                for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
                  {
@@ -664,12 +679,12 @@ void Close_Buy_trades()
      {
       for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
         {
-         Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
+         bool Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
          if(OrderSymbol()== Symbol())
            {
             if(OrderType()==OP_BUY && OrderMagicNumber() == MagicNumber)
               {
-               Closed=OrderClose(OrderTicket(),OrderLots(),Bid,3,CLR_NONE);
+               bool Closed=OrderClose(OrderTicket(),OrderLots(),Bid,3,CLR_NONE);
                if(Closed == 0)
                   Error_Handler();
               }
@@ -685,12 +700,12 @@ void Close_Sell_trades()
      {
       for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
         {
-         Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
+         bool Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
          if(OrderSymbol()== Symbol())
            {
             if(OrderType()==OP_SELL && OrderMagicNumber() == MagicNumber)
               {
-               Closed= OrderClose(OrderTicket(),OrderLots(),Ask,3,CLR_NONE);
+               bool Closed= OrderClose(OrderTicket(),OrderLots(),Ask,3,CLR_NONE);
                if(Closed == 0)
                   Error_Handler();
               }
@@ -707,12 +722,12 @@ void Close_all_trades()
      {
       for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
         {
-         Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
+         bool Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
          if(OrderSymbol()== Symbol())
            {
             if(OrderType()==OP_BUY && OrderMagicNumber() == MagicNumber)
               {
-               Closed=OrderClose(OrderTicket(),OrderLots(),Bid,3,CLR_NONE);
+               bool Closed=OrderClose(OrderTicket(),OrderLots(),Bid,3,CLR_NONE);
                if(Closed == 0)
                   Error_Handler();
               }
@@ -806,7 +821,7 @@ void Buy_LTOP()
   {
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
+      bool Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_BUY && OrderMagicNumber() == MagicNumber)
          Buy_OP = OrderOpenPrice();
      }
@@ -816,7 +831,7 @@ void Sell_LTOP()
   {
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
+      bool Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_SELL && OrderMagicNumber() == MagicNumber)
          Sell_OP = OrderOpenPrice();
      }
@@ -826,7 +841,7 @@ void Buy_FTOP()
   {
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
+      bool Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_BUY && OrderMagicNumber() == MagicNumber)
          First_Buy_OP = OrderOpenPrice();
       break;
@@ -837,7 +852,7 @@ void Sell_FTOP()
   {
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
+      bool Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_SELL && OrderMagicNumber() == MagicNumber)
          First_Sell_OP = OrderOpenPrice();
       break;
@@ -851,7 +866,7 @@ void Buy_MTLS()
    Buy_MLS =0;
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
+      bool Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_BUY && OrderMagicNumber() == MagicNumber)
          if(Buy_MLS < OrderLots())
             Buy_MLS=OrderLots();
@@ -863,7 +878,7 @@ void Sell_MTLS()
    Sell_MLS=0;
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
+      bool Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_SELL && OrderMagicNumber() == MagicNumber)
          if(Sell_MLS < OrderLots())
             Sell_MLS=OrderLots();
@@ -879,7 +894,7 @@ void Gross_Profit_Loss()
 
    for(int pos_0 = 0; pos_0 < OrdersHistoryTotal(); pos_0++)
      {
-      Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_HISTORY);
+      bool Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_HISTORY);
 
       if(OrderSymbol() == Symbol())
         {
@@ -918,7 +933,7 @@ void Current_Profit_Loss()
 
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
+      bool Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
 
       if(OrderSymbol()== Symbol())
         {
@@ -947,7 +962,7 @@ void Net_Lot()
 
    for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
-      Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
+      bool Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
 
       if(OrderSymbol()== Symbol())
         {
@@ -1007,5 +1022,7 @@ int connectServer()
      }
    return 0;
   }
+
+//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
