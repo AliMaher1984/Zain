@@ -54,8 +54,8 @@ extern int Buy_trailing_profit_points = 25;
 extern int Sell_trailprofit_start_inpoints=50;
 extern int Sell_trailing_profit_points = 25;
 //+------------------------------------------------------------------+
-int pos_0,Buy_Profit_Points,Sell_Profit_Points,Buy_count,Sell_count,BuyTicket,SellTicket,Slippage_value,Pair_open_trades,Pair_history_trades;
-double Total_trailing_points,Tpcal_Sell,Stopcal_Buy,Tpcal_Buy,Stopcal_Sell,Stop_current,TProfit_current,Averaging_points,Bopen_Price,Sopen_Price,Buy_Target_Profit,Buy_Averaging_points,Sell_Target_Profit,Sell_Averaging_points,Point_value,Buy_LotSize,Sell_LotSize,Minimum_stoploss_value,Gross_profit_loss,Buy_gross_profit_loss,Sell_gross_profit_loss,Max_gross_profit_loss,Max_Buy_gross_profit_loss,Max_Sell_gross_profit_loss,Buy_trades_profit,Sell_trades_profit,Current_profit_loss,Buy_trades_lot,Sell_trades_lot,Net_lot,BuyStopLoss,SellStopLoss,BuyTakeProfit,SellTakeProfit,Sell_OP,Buy_OP,First_Sell_OP,First_Buy_OP,Sell_MLS,Buy_MLS;
+int Buy_Profit_Points,Sell_Profit_Points,Buy_count,Sell_count,Slippage_value,Pair_open_trades,Pair_history_trades;
+double Averaging_points,Buy_Target_Profit,Buy_Averaging_points,Sell_Target_Profit,Sell_Averaging_points,Point_value,Buy_LotSize,Sell_LotSize,Minimum_stoploss_value,Gross_profit_loss,Buy_gross_profit_loss,Sell_gross_profit_loss,Max_gross_profit_loss,Max_Buy_gross_profit_loss,Max_Sell_gross_profit_loss,Buy_trades_profit,Sell_trades_profit,Current_profit_loss,Buy_trades_lot,Sell_trades_lot,Net_lot,BuyStopLoss,SellStopLoss,BuyTakeProfit,SellTakeProfit,Sell_OP,Buy_OP,First_Sell_OP,First_Buy_OP,Sell_MLS,Buy_MLS;
 bool  Stop_Placing,Select,Closed,Modify,Sell_TP,Buy_TP;
 string Trend,ErrAlert;
 //+------------------------------------------------------------------+
@@ -94,7 +94,6 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
-   double minTakeProfit = MarketInfo(Symbol(), MODE_STOPLEVEL);
 
    Trades_Counter();
    Gross_Profit_Loss();
@@ -122,7 +121,7 @@ void OnTick()
       else
          Buy_LotSize=Starting_LotSize;
 
-      Bopen_Price=Close[1];
+      double Bopen_Price=Close[1];
       Buy_trade();
       Buy_LTOP();
 
@@ -136,7 +135,7 @@ void OnTick()
       else
          Sell_LotSize=Starting_LotSize;
 
-      Sopen_Price=Close[1];
+      double Sopen_Price=Close[1];
       Sell_trade();
       Sell_LTOP();
      }
@@ -442,6 +441,9 @@ double Minimum_stoploss_points_calc()
 //+------------------------------------------------------------------+
 void Total_Trailing_profit()
   {
+  int pos_0;
+  double Total_trailing_points,Tpcal_Sell,Stopcal_Buy,Tpcal_Buy,Stopcal_Sell,Stop_current,TProfit_current;
+  
    if(Trend=="Sell")
      {
       if((Gross_profit_loss + Current_profit_loss) >= (Net_lot * 10 * Profit_Points + Max_gross_profit_loss)&& Net_lot>0)
@@ -660,7 +662,7 @@ void Close_Buy_trades()
   {
    while(Buy_count>0)
      {
-      for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+      for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
         {
          Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
          if(OrderSymbol()== Symbol())
@@ -681,7 +683,7 @@ void Close_Sell_trades()
   {
    while(Sell_count>0)
      {
-      for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+      for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
         {
          Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
          if(OrderSymbol()== Symbol())
@@ -703,7 +705,7 @@ void Close_all_trades()
   {
    while(Buy_count>0 || Sell_count>0)
      {
-      for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+      for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
         {
          Select=OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
          if(OrderSymbol()== Symbol())
@@ -738,7 +740,7 @@ int Count(int Order_type, string Pair_symbol, int Magic_number)
   {
 
    int Total = 0;
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       if(OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES))
          if(OrderType() == Order_type && OrderSymbol() == Pair_symbol && OrderMagicNumber() == Magic_number)
@@ -769,7 +771,7 @@ void Buy_trade()
    while(IsTradeContextBusy())
       Sleep(10);
    RefreshRates();
-   BuyTicket = OrderSend(Symbol(),OP_BUY,Buy_LotSize,Ask,Slippage_value,BuyStopLoss,BuyTakeProfit,"Zain AI Expert Buy",MagicNumber,0,Green);
+   int BuyTicket = OrderSend(Symbol(),OP_BUY,Buy_LotSize,Ask,Slippage_value,BuyStopLoss,BuyTakeProfit,"Zain AI Expert Buy",MagicNumber,0,Green);
    if(BuyTicket < 0)
       Error_Handler();
   }
@@ -795,14 +797,14 @@ void Sell_trade()
    while(IsTradeContextBusy())
       Sleep(10);
    RefreshRates();
-   SellTicket = OrderSend(Symbol(),OP_SELL,Sell_LotSize,Bid,Slippage_value,SellStopLoss,SellTakeProfit,"Zain AI Expert Sell",MagicNumber,0,Red);
+   int SellTicket = OrderSend(Symbol(),OP_SELL,Sell_LotSize,Bid,Slippage_value,SellStopLoss,SellTakeProfit,"Zain AI Expert Sell",MagicNumber,0,Red);
    if(SellTicket < 0)
       Error_Handler();
   }
 //+------------------------------------------------------------------+
 void Buy_LTOP()
   {
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_BUY && OrderMagicNumber() == MagicNumber)
@@ -812,7 +814,7 @@ void Buy_LTOP()
 //+------------------------------------------------------------------+
 void Sell_LTOP()
   {
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_SELL && OrderMagicNumber() == MagicNumber)
@@ -822,7 +824,7 @@ void Sell_LTOP()
 //+------------------------------------------------------------------+
 void Buy_FTOP()
   {
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_BUY && OrderMagicNumber() == MagicNumber)
@@ -833,7 +835,7 @@ void Buy_FTOP()
 //+------------------------------------------------------------------+
 void Sell_FTOP()
   {
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_SELL && OrderMagicNumber() == MagicNumber)
@@ -847,7 +849,7 @@ void Buy_MTLS()
   {
 
    Buy_MLS =0;
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_BUY && OrderMagicNumber() == MagicNumber)
@@ -859,7 +861,7 @@ void Buy_MTLS()
 void Sell_MTLS()
   {
    Sell_MLS=0;
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select=OrderSelect(pos_0, SELECT_BY_POS, MODE_TRADES);
       if(OrderSymbol() == Symbol() && OrderType() == OP_SELL && OrderMagicNumber() == MagicNumber)
@@ -875,7 +877,7 @@ void Gross_Profit_Loss()
    Sell_gross_profit_loss=0;
    Gross_profit_loss=0;
 
-   for(pos_0 = 0; pos_0 < OrdersHistoryTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersHistoryTotal(); pos_0++)
      {
       Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_HISTORY);
 
@@ -914,7 +916,7 @@ void Current_Profit_Loss()
    Sell_trades_profit=0;
    Current_profit_loss=0;
 
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
 
@@ -943,7 +945,7 @@ void Net_Lot()
    Sell_trades_lot=0;
    Net_lot=0;
 
-   for(pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
+   for(int pos_0 = 0; pos_0 < OrdersTotal(); pos_0++)
      {
       Select= OrderSelect(pos_0,SELECT_BY_POS,MODE_TRADES);
 
@@ -1005,7 +1007,5 @@ int connectServer()
      }
    return 0;
   }
-
-//+------------------------------------------------------------------+
 
 //+------------------------------------------------------------------+
